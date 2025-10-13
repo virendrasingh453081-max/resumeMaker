@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Third Eye Computer Class Student Resume Maker</title>
 
-  <!-- Tailwind CSS & html2pdf -->
+  <!-- Tailwind and html2pdf -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -13,184 +13,280 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root { --accent: #6366f1; --accent-600: #4f46e5; --bg-grad-from: #eef2ff; --bg-grad-to: #e0e7ff; }
+    html,body { height:100%; }
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg, var(--bg-grad-from), var(--bg-grad-to));
+      margin: 0;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
     .resume-card {
-      background: white;
+      background: #fff;
       border-radius: 1rem;
-      padding: 2rem;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s;
-    }
-    .resume-card:hover {
-      transform: translateY(-2px);
+      padding: 1.75rem;
+      box-shadow: 0 12px 30px rgba(16,24,40,0.08);
     }
     .section-title {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      border-bottom: 2px solid #6366f1;
+      color: var(--accent-600);
+      border-bottom: 2px solid #c7d2fe;
       padding-bottom: 0.25rem;
-      margin-bottom: 0.75rem;
-      color: #4338ca;
+      margin-bottom: 0.5rem;
     }
-    .btn {
-      transition: all 0.2s ease-in-out;
-    }
-    .btn:hover {
-      transform: scale(1.05);
+
+    /* Ensure printed/pdf colors & layout are consistent */
+    @media print {
+      body { background: white; }
+      .resume-card { box-shadow: none; margin: 0; padding: 1rem; border-radius: 0; }
     }
   </style>
 </head>
-
 <body class="min-h-screen flex flex-col items-center p-6">
 
-  <header class="text-center mb-8">
-    <h1 class="text-4xl font-extrabold text-indigo-700 mb-2 drop-shadow-lg">
-      Third Eye Computer Class Student Resume Maker
-    </h1>
-    <p class="text-gray-600 text-sm font-medium">
-      Contact: <span class="font-semibold text-gray-800">8078618395</span>
-    </p>
+  <header class="text-center mb-6">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-700 mb-1">Third Eye Computer Class Student Resume Maker</h1>
+    <p class="text-gray-600 text-sm">Contact: <span class="font-semibold text-gray-800">8078618395</span></p>
   </header>
 
-  <div class="flex flex-col lg:flex-row w-full max-w-7xl gap-8">
-    <!-- Left Panel -->
-    <div class="bg-white p-8 rounded-2xl shadow-2xl lg:w-1/3">
-      <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">🎓 Enter Your Details</h2>
+  <main class="w-full max-w-7xl flex flex-col lg:flex-row gap-8">
+    <!-- Left: Form -->
+    <aside class="lg:w-1/3 bg-white p-6 rounded-2xl shadow-lg">
+      <h2 class="text-xl font-bold text-indigo-700 text-center mb-4">🎓 Enter Details</h2>
 
-      <form id="resume-form" class="space-y-4">
-        <input id="name" type="text" placeholder="Full Name" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
-        <input id="email" type="email" placeholder="Email Address" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
-        <input id="phone" type="text" placeholder="Phone Number" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
-        <textarea id="summary" rows="3" placeholder="Professional Summary" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"></textarea>
-        <textarea id="experience" rows="3" placeholder="Experience (each line = one point)" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"></textarea>
-        <textarea id="education" rows="3" placeholder="Education Details" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"></textarea>
-        <input id="skills" type="text" placeholder="Skills (comma-separated)" class="w-full p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
+      <form id="resume-form" class="space-y-3">
+        <input id="name" placeholder="Full name" class="w-full p-3 border border-indigo-100 rounded-lg" />
+        <input id="email" placeholder="Email address" class="w-full p-3 border border-indigo-100 rounded-lg" />
+        <input id="phone" placeholder="Phone number" class="w-full p-3 border border-indigo-100 rounded-lg" />
+        <textarea id="summary" rows="3" placeholder="Profile summary" class="w-full p-3 border border-indigo-100 rounded-lg"></textarea>
+        <textarea id="experience" rows="3" placeholder="Experience — one item per line" class="w-full p-3 border border-indigo-100 rounded-lg"></textarea>
+        <textarea id="education" rows="2" placeholder="Education details" class="w-full p-3 border border-indigo-100 rounded-lg"></textarea>
+        <input id="skills" placeholder="Skills (comma-separated)" class="w-full p-3 border border-indigo-100 rounded-lg" />
       </form>
 
-      <div class="mt-8 flex flex-wrap gap-3 justify-center">
-        <button id="download-pdf" class="btn flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-semibold">
-          📄 Download PDF
-        </button>
-        <button id="download-html" class="btn flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold">
-          🌐 Download HTML
-        </button>
-        <button id="send-boss" class="btn flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold">
-          💬 Send to Boss
-        </button>
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <button id="download-pdf" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg btn">📄 PDF</button>
+        <button id="download-html" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg btn">🌐 HTML</button>
+        <button id="send-boss" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg btn">💬 Send</button>
       </div>
-    </div>
+    </aside>
 
-    <!-- Right Panel -->
-    <div class="lg:w-2/3 bg-indigo-50 p-8 rounded-2xl shadow-inner overflow-auto">
+    <!-- Right: Preview -->
+    <section class="lg:w-2/3">
       <div id="resume-output" class="resume-card text-gray-800">
-        <h1 class="text-3xl font-bold text-indigo-700 text-center mb-1" id="out-name">Your Name</h1>
-        <p class="text-center text-gray-600 mb-4" id="out-contact">Email | Phone</p>
+        <header class="text-center">
+          <h1 id="out-name" class="text-2xl sm:text-3xl font-bold text-indigo-700">Your Name</h1>
+          <p id="out-contact" class="text-gray-600 mt-1">Email | Phone</p>
+        </header>
 
         <div class="mt-4">
-          <h2 class="section-title">Summary</h2>
-          <p id="out-summary" class="text-gray-700">Your summary will appear here.</p>
+          <h3 class="section-title">Summary</h3>
+          <div id="out-summary" class="text-gray-700">Your profile summary will appear here.</div>
         </div>
 
         <div class="mt-4">
-          <h2 class="section-title">Experience</h2>
+          <h3 class="section-title">Experience</h3>
           <ul id="out-experience" class="list-disc pl-5 text-gray-700"></ul>
         </div>
 
         <div class="mt-4">
-          <h2 class="section-title">Education</h2>
-          <p id="out-education" class="text-gray-700">Your education info appears here.</p>
+          <h3 class="section-title">Education</h3>
+          <div id="out-education" class="text-gray-700">Education details...</div>
         </div>
 
         <div class="mt-4">
-          <h2 class="section-title">Skills</h2>
-          <ul id="out-skills" class="list-disc pl-5 grid grid-cols-2 gap-x-4 text-gray-700"></ul>
+          <h3 class="section-title">Skills</h3>
+          <ul id="out-skills" class="list-disc pl-5 grid grid-cols-2 gap-1 text-gray-700"></ul>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <footer class="mt-8 text-center text-gray-500 text-sm">
-    © 2025 Third Eye Computer Class | Built with ❤️ for students
-  </footer>
+  <footer class="mt-8 text-gray-500 text-sm">© 2025 Third Eye Computer Class</footer>
 
   <script>
-    const form = document.getElementById('resume-form');
-    const updateResume = () => {
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const summary = document.getElementById('summary').value.trim();
-      const experience = document.getElementById('experience').value.trim().split('\n').filter(l => l);
-      const education = document.getElementById('education').value.trim();
-      const skills = document.getElementById('skills').value.trim().split(',').filter(s => s);
+    /* -------------------------
+       Helpers & UI bindings
+    ------------------------- */
+    const el = id => document.getElementById(id);
 
-      document.getElementById('out-name').textContent = name || 'Your Name';
-      document.getElementById('out-contact').textContent = `${email || ''}${email && phone ? ' | ' : ''}${phone || ''}`;
-      document.getElementById('out-summary').textContent = summary || 'Your summary will appear here.';
-      document.getElementById('out-experience').innerHTML = experience.map(e => `<li>${e}</li>`).join('');
-      document.getElementById('out-education').textContent = education || 'Education info here.';
-      document.getElementById('out-skills').innerHTML = skills.map(s => `<li>${s}</li>`).join('');
-    };
-    form.addEventListener('input', updateResume);
+    function sanitizeText(s) { return (s||'').trim(); }
 
-    // 📄 Download PDF
-    document.getElementById('download-pdf').onclick = () => {
-      const resume = document.getElementById('resume-output');
-      html2pdf().from(resume).set({
-        margin: 0.5,
-        filename: 'resume.pdf',
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4' }
-      }).save();
-    };
+    // Update preview from form values
+    function updateResume() {
+      const name = sanitizeText(el('name').value) || 'Your Name';
+      const email = sanitizeText(el('email').value);
+      const phone = sanitizeText(el('phone').value);
+      const summary = sanitizeText(el('summary').value) || 'Your profile summary will appear here.';
+      const experience = sanitizeText(el('experience').value).split('\n').map(x => x.trim()).filter(Boolean);
+      const education = sanitizeText(el('education').value) || 'Education details...';
+      const skills = sanitizeText(el('skills').value).split(',').map(x => x.trim()).filter(Boolean);
 
-    // 🌐 Download HTML
-    document.getElementById('download-html').onclick = () => {
-      const htmlContent = document.getElementById('resume-output').outerHTML;
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'resume.html';
-      link.click();
-    };
-
-    // Convert resume to PDF blob
-    function generatePdfBlob() {
-      return new Promise((resolve) => {
-        const resume = document.getElementById('resume-output');
-        const opt = { margin: 0.25, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4' } };
-        html2pdf().set(opt).from(resume).toPdf().get('pdf').then(pdf => resolve(pdf.output('blob')));
-      });
+      el('out-name').textContent = name;
+      el('out-contact').textContent = [email, phone].filter(Boolean).join(' | ');
+      el('out-summary').textContent = summary;
+      el('out-experience').innerHTML = experience.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+      el('out-education').textContent = education;
+      el('out-skills').innerHTML = skills.map(s => `<li>${escapeHtml(s)}</li>`).join('');
     }
 
-    // Upload to GoFile.io
-    async function uploadToGofile(blob) {
-      const formData = new FormData();
-      formData.append('file', blob, 'resume.pdf');
-      const res = await fetch('https://store1.gofile.io/uploadFile', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.data && data.data.downloadPage) return data.data.downloadPage;
-      throw new Error('Upload failed');
+    // Basic escape to avoid accidental HTML injection
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
     }
 
-    // 💬 Send to Boss via WhatsApp
-    async function sendToBoss() {
-      const bossNumber = "918078618395";
-      const name = document.getElementById('name').value.trim() || "Unnamed Student";
-      const skills = document.getElementById('skills').value.trim() || "No skills listed";
+    // Live update
+    const formInputs = ['name','email','phone','summary','experience','education','skills'];
+    formInputs.forEach(id => el(id).addEventListener('input', updateResume));
+
+    // Ensure preview is populated on load
+    window.addEventListener('load', () => {
+      updateResume();
+    });
+
+    /* --------------------------------------------------------
+       PDF generation — wait for fonts & rendering before export
+       This avoids blank PDF output.
+       -------------------------------------------------------- */
+
+    // Wait for fonts to be ready and a small tick so browser renders
+    async function readyToRenderForPdf() {
       try {
-        const blob = await generatePdfBlob();
-        const link = await uploadToGofile(blob);
-        const msg = `Hello Sir 👋,%0A%0AHere is a new student resume:%0A👤 *Name:* ${encodeURIComponent(name)}%0A🧠 *Skills:* ${encodeURIComponent(skills)}%0A📄 *Resume Link:* ${encodeURIComponent(link)}%0A%0A– Third Eye Computer Class`;
-        window.open(`https://wa.me/${bossNumber}?text=${msg}`, '_blank');
-      } catch (err) {
-        alert("Error: " + err.message);
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+      } catch (e) {
+        // ignore
       }
+      // small delay so fonts/styles get applied
+      await new Promise(r => setTimeout(r, 150));
     }
-    document.getElementById('send-boss').onclick = sendToBoss;
+
+    async function generatePdf(options = {}) {
+      await readyToRenderForPdf();
+
+      const resumeEl = el('resume-output');
+
+      // Default options (tunable)
+      const opt = {
+        margin: 0.4,
+        filename: options.filename || 'resume.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: false, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+
+      // html2pdf returns a Promise when using .save()
+      return html2pdf().set(opt).from(resumeEl).toPdf().get('pdf').then(pdf => pdf.output('blob')).catch(err => { throw err; });
+    }
+
+    // Button: Download PDF (user-triggered)
+    el('download-pdf').addEventListener('click', async () => {
+      try {
+        // update preview just in case
+        updateResume();
+        // wait + render then produce PDF and trigger save with html2pdf().save()
+        await readyToRenderForPdf();
+        const resumeEl = el('resume-output');
+        html2pdf().set({
+          margin: 0.4,
+          filename: 'resume.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'in', format: 'a4' }
+        }).from(resumeEl).save();
+      } catch (err) {
+        alert('PDF generation failed: ' + (err.message || err));
+        console.error(err);
+      }
+    });
+
+    /* --------------------------------------------------------
+       Download FULL styled HTML (standalone) — includes head/styles
+       -------------------------------------------------------- */
+
+    el('download-html').addEventListener('click', () => {
+      try {
+        updateResume();
+        // Build a full HTML document that mirrors the preview styling
+        // Include Tailwind CDN + Google Fonts + a small inline style so it looks identical
+        const docHead = `
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Resume - ${escapeHtml(el('out-name').textContent)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; background: #f8fafc; padding: 24px; }
+  .resume-card { background:#fff; border-radius:12px; padding:20px; max-width:800px; margin:0 auto; }
+  .section-title { font-weight:700; color:#4f46e5; border-bottom:2px solid #e6e9ff; padding-bottom:6px; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div class="resume-card">
+`;
+
+        const docFooter = `</div></body></html>`;
+
+        // Use innerHTML from the preview card (it already contains the styled content)
+        const contentHtml = el('resume-output').innerHTML;
+
+        const fullHtml = docHead + contentHtml + docFooter;
+        const blob = new Blob([fullHtml], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (el('out-name').textContent || 'resume').replace(/\s+/g,'_').toLowerCase() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+      } catch (err) {
+        alert('HTML download failed: ' + (err.message || err));
+        console.error(err);
+      }
+    });
+
+    /* --------------------------------------------------------
+       Upload to GoFile (CORS-friendly) & Send WhatsApp link
+       -------------------------------------------------------- */
+
+    async function uploadToGofile(blob) {
+      // Note: store1.gofile.io is a public endpoint; if it changes you may need to update to another mirror
+      const fd = new FormData();
+      fd.append('file', blob, 'resume.pdf');
+      const res = await fetch('https://store1.gofile.io/uploadFile', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Upload response not OK: ' + res.status);
+      const data = await res.json();
+      if (data && data.data && data.data.downloadPage) return data.data.downloadPage;
+      throw new Error('Upload failed: invalid response');
+    }
+
+    el('send-boss').addEventListener('click', async () => {
+      try {
+        updateResume();
+        // Create PDF blob
+        const blob = await generatePdf({ filename: 'resume.pdf' }).catch(e => { throw e; });
+        // Upload to GoFile
+        const link = await uploadToGofile(blob);
+        // Compose WhatsApp message and open
+        const bossNumber = '9180788618395'  // <<--- replace with boss number if needed (country code + number)
+        const name = encodeURIComponent(el('out-name').textContent || 'Unnamed Student');
+        const skillsRaw = el('skills').value.trim() || '';
+        const skills = encodeURIComponent(skillsRaw);
+        const msg = `Hello Sir 👋%0A%0ANew student resume:%0AName: ${name}%0ASkills: ${skills}%0AResume: ${encodeURIComponent(link)}%0A%0A– Third Eye Computer Class`;
+        window.open(`https://wa.me/${bossNumber}?text=${msg}`, '_blank');
+        // Optionally show the link to user
+        setTimeout(() => alert('Resume uploaded. Link opened in WhatsApp chat.'), 700);
+      } catch (err) {
+        alert('Send failed: ' + (err.message || err));
+        console.error(err);
+      }
+    });
   </script>
 </body>
 </html>
