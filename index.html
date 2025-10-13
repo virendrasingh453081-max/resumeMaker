@@ -41,6 +41,10 @@
       body { background: white; }
       .resume-card { box-shadow: none; margin: 0; padding: 1rem; border-radius: 0; }
     }
+
+    /* small button style convenience */
+    .btn { transition: transform .06s ease; }
+    .btn:active { transform: translateY(1px); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-6">
@@ -55,7 +59,7 @@
     <aside class="lg:w-1/3 bg-white p-6 rounded-2xl shadow-lg">
       <h2 class="text-xl font-bold text-indigo-700 text-center mb-4">🎓 Enter Details</h2>
 
-      <form id="resume-form" class="space-y-3">
+      <form id="resume-form" class="space-y-3" onsubmit="return false;">
         <input id="name" placeholder="Full name" class="w-full p-3 border border-indigo-100 rounded-lg" />
         <input id="email" placeholder="Email address" class="w-full p-3 border border-indigo-100 rounded-lg" />
         <input id="phone" placeholder="Phone number" class="w-full p-3 border border-indigo-100 rounded-lg" />
@@ -107,50 +111,67 @@
 
   <script>
     /* -------------------------
-       Helpers & UI bindings
+       Lightweight safe helpers
     ------------------------- */
     const el = id => document.getElementById(id);
 
-    function sanitizeText(s) { return (s||'').trim(); }
+    function safeText(s) { return (s === null || s === undefined) ? '' : String(s); }
+    function sanitizeText(s) { return safeText(s).trim(); }
 
-    // Update preview from form values
-    function updateResume() {
-      const name = sanitizeText(el('name').value) || 'Your Name';
-      const email = sanitizeText(el('email').value);
-      const phone = sanitizeText(el('phone').value);
-      const summary = sanitizeText(el('summary').value) || 'Your profile summary will appear here.';
-      const experience = sanitizeText(el('experience').value).split('\n').map(x => x.trim()).filter(Boolean);
-      const education = sanitizeText(el('education').value) || 'Education details...';
-      const skills = sanitizeText(el('skills').value).split(',').map(x => x.trim()).filter(Boolean);
-
-      el('out-name').textContent = name;
-      el('out-contact').textContent = [email, phone].filter(Boolean).join(' | ');
-      el('out-summary').textContent = summary;
-      el('out-experience').innerHTML = experience.map(i => `<li>${escapeHtml(i)}</li>`).join('');
-      el('out-education').textContent = education;
-      el('out-skills').innerHTML = skills.map(s => `<li>${escapeHtml(s)}</li>`).join('');
-    }
-
-    // Basic escape to avoid accidental HTML injection
+    // escape to avoid accidental HTML injection
     function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
+      return String(str).replace(/[&<>"']/g, function(m){
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+      });
     }
 
-    // Live update
-    const formInputs = ['name','email','phone','summary','experience','education','skills'];
-    formInputs.forEach(id => el(id).addEventListener('input', updateResume));
+    /* -------------------------
+       Update resume preview
+    ------------------------- */
+    function updateResume() {
+      // if any element missing, bail safely
+      const nameEl = el('name'), emailEl = el('email'), phoneEl = el('phone'),
+            summaryEl = el('summary'), experienceEl = el('experience'),
+            educationEl = el('education'), skillsEl = el('skills');
 
-    // Ensure preview is populated on load
-    window.addEventListener('load', () => {
+      const outName = el('out-name'), outContact = el('out-contact'),
+            outSummary = el('out-summary'), outExperience = el('out-experience'),
+            outEducation = el('out-education'), outSkills = el('out-skills');
+
+      if (!outName) return;
+
+      const name = sanitizeText(nameEl?.value) || 'Your Name';
+      const email = sanitizeText(emailEl?.value);
+      const phone = sanitizeText(phoneEl?.value);
+      const summary = sanitizeText(summaryEl?.value) || 'Your profile summary will appear here.';
+      const experience = (sanitizeText(experienceEl?.value) || '').split('\n').map(x => x.trim()).filter(Boolean);
+      const education = sanitizeText(educationEl?.value) || 'Education details...';
+      const skills = (sanitizeText(skillsEl?.value) || '').split(',').map(x => x.trim()).filter(Boolean);
+
+      outName.textContent = name;
+      outContact.textContent = [email, phone].filter(Boolean).join(' | ');
+      outSummary.textContent = summary;
+      outExperience.innerHTML = experience.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+      outEducation.textContent = education;
+      outSkills.innerHTML = skills.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+    }
+
+    // wire inputs to live preview
+    const formInputs = ['name','email','phone','summary','experience','education','skills'];
+    formInputs.forEach(id => {
+      const node = el(id);
+      if (node) node.addEventListener('input', updateResume);
+    });
+
+    // initial populate
+    window.addEventListener('DOMContentLoaded', () => {
       updateResume();
     });
 
-    /* --------------------------------------------------------
-       PDF generation — wait for fonts & rendering before export
-       This avoids blank PDF output.
-       -------------------------------------------------------- */
-
-    // Wait for fonts to be ready and a small tick so browser renders
+    /* -------------------------
+       PDF generation helpers
+       - ensures fonts rendered before capture
+    ------------------------- */
     async function readyToRenderForPdf() {
       try {
         if (document.fonts && document.fonts.ready) {
@@ -159,66 +180,80 @@
       } catch (e) {
         // ignore
       }
-      // small delay so fonts/styles get applied
+      // small delay so browser renders
       await new Promise(r => setTimeout(r, 150));
     }
 
-    async function generatePdf(options = {}) {
+    // returns a Blob of rendered PDF
+    async function generatePdfBlob(filename = 'resume.pdf') {
       await readyToRenderForPdf();
-
       const resumeEl = el('resume-output');
+      if (!resumeEl) throw new Error('Resume element not found');
 
-      // Default options (tunable)
       const opt = {
         margin: 0.4,
-        filename: options.filename || 'resume.pdf',
+        filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, allowTaint: false, logging: false },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
       };
 
-      // html2pdf returns a Promise when using .save()
-      return html2pdf().set(opt).from(resumeEl).toPdf().get('pdf').then(pdf => pdf.output('blob')).catch(err => { throw err; });
+      // html2pdf().from(...).toPdf().get('pdf') returns jsPDF instance.
+      // We create the pdf and return a Blob by using .output('blob')
+      return new Promise((resolve, reject) => {
+        try {
+          html2pdf().set(opt).from(resumeEl).toPdf().output('blob').then(blob => {
+            resolve(blob);
+          }).catch(err => reject(err));
+        } catch (err) {
+          reject(err);
+        }
+      });
     }
 
-    // Button: Download PDF (user-triggered)
-    el('download-pdf').addEventListener('click', async () => {
-      try {
-        // update preview just in case
-        updateResume();
-        // wait + render then produce PDF and trigger save with html2pdf().save()
-        await readyToRenderForPdf();
-        const resumeEl = el('resume-output');
-        html2pdf().set({
-          margin: 0.4,
-          filename: 'resume.pdf',
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'in', format: 'a4' }
-        }).from(resumeEl).save();
-      } catch (err) {
-        alert('PDF generation failed: ' + (err.message || err));
-        console.error(err);
-      }
-    });
+    /* -------------------------
+       Buttons: download PDF / HTML
+    ------------------------- */
+    const btnPdf = el('download-pdf');
+    const btnHtml = el('download-html');
+    const btnSend = el('send-boss');
 
-    /* --------------------------------------------------------
-       Download FULL styled HTML (standalone) — includes head/styles
-       -------------------------------------------------------- */
+    if (btnPdf) {
+      btnPdf.addEventListener('click', async () => {
+        try {
+          btnPdf.disabled = true;
+          updateResume();
+          await readyToRenderForPdf();
+          const resumeEl = el('resume-output');
+          html2pdf().set({
+            margin: 0.4,
+            filename: 'resume.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'a4' }
+          }).from(resumeEl).save();
+        } catch (err) {
+          alert('PDF generation failed: ' + (err.message || err));
+          console.error(err);
+        } finally {
+          btnPdf.disabled = false;
+        }
+      });
+    }
 
-    el('download-html').addEventListener('click', () => {
-      try {
-        updateResume();
-        // Build a full HTML document that mirrors the preview styling
-        // Include Tailwind CDN + Google Fonts + a small inline style so it looks identical
-        const docHead = `
+    if (btnHtml) {
+      btnHtml.addEventListener('click', () => {
+        try {
+          updateResume();
+          const safeName = (el('out-name')?.textContent || 'resume').replace(/\s+/g,'_').toLowerCase();
+          const docHead = `
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Resume - ${escapeHtml(el('out-name').textContent)}</title>
+<title>Resume - ${escapeHtml(el('out-name')?.textContent || '')}</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -231,62 +266,106 @@
 <div class="resume-card">
 `;
 
-        const docFooter = `</div></body></html>`;
+          const docFooter = `</div></body></html>`;
 
-        // Use innerHTML from the preview card (it already contains the styled content)
-        const contentHtml = el('resume-output').innerHTML;
-
-        const fullHtml = docHead + contentHtml + docFooter;
-        const blob = new Blob([fullHtml], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = (el('out-name').textContent || 'resume').replace(/\s+/g,'_').toLowerCase() + '.html';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(a.href);
-      } catch (err) {
-        alert('HTML download failed: ' + (err.message || err));
-        console.error(err);
-      }
-    });
+          // Use sanitized innerHTML of preview card
+          const contentHtml = el('resume-output')?.innerHTML || '';
+          const fullHtml = docHead + contentHtml + docFooter;
+          const blob = new Blob([fullHtml], { type: 'text/html' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `${safeName}.html`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          // revoke after a short delay to ensure download started
+          setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+        } catch (err) {
+          alert('HTML download failed: ' + (err.message || err));
+          console.error(err);
+        }
+      });
+    }
 
     /* --------------------------------------------------------
        Upload to GoFile (CORS-friendly) & Send WhatsApp link
+       - uploadToGofile returns the public download page URL string
+       - NOTE: public endpoints may change; keep that in mind
        -------------------------------------------------------- */
-
-    async function uploadToGofile(blob) {
-      // Note: store1.gofile.io is a public endpoint; if it changes you may need to update to another mirror
+    async function uploadToGofile(blob, filename = 'resume.pdf') {
       const fd = new FormData();
-      fd.append('file', blob, 'resume.pdf');
-      const res = await fetch('https://store1.gofile.io/uploadFile', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Upload response not OK: ' + res.status);
-      const data = await res.json();
+      // The server expects a 'file' field
+      fd.append('file', blob, filename);
+
+      // store1.gofile.io is a commonly used mirror; if it fails the endpoint may have changed
+      const endpoint = 'https://store1.gofile.io/uploadFile';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: fd
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload response not OK: ' + response.status);
+      }
+
+      // Defensive parse
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error('Failed to parse upload response: ' + e.message);
+      }
+
+      // expected structure: { data: { downloadPage: 'https://...' } }
       if (data && data.data && data.data.downloadPage) return data.data.downloadPage;
-      throw new Error('Upload failed: invalid response');
+      // sometimes gofile returns a direct link in data.code or data.downloadPage - check alternatives
+      if (data && data.downloadPage) return data.downloadPage;
+      if (data && data.data && data.data.link) return data.data.link;
+
+      throw new Error('Upload failed: invalid response structure');
     }
 
-    el('send-boss').addEventListener('click', async () => {
-      try {
-        updateResume();
-        // Create PDF blob
-        const blob = await generatePdf({ filename: 'resume.pdf' }).catch(e => { throw e; });
-        // Upload to GoFile
-        const link = await uploadToGofile(blob);
-        // Compose WhatsApp message and open
-        const bossNumber = '9180788618395'  // <<--- replace with boss number if needed (country code + number)
-        const name = encodeURIComponent(el('out-name').textContent || 'Unnamed Student');
-        const skillsRaw = el('skills').value.trim() || '';
-        const skills = encodeURIComponent(skillsRaw);
-        const msg = `Hello Sir 👋%0A%0ANew student resume:%0AName: ${name}%0ASkills: ${skills}%0AResume: ${encodeURIComponent(link)}%0A%0A– Third Eye Computer Class`;
-        window.open(`https://wa.me/${bossNumber}?text=${msg}`, '_blank');
-        // Optionally show the link to user
-        setTimeout(() => alert('Resume uploaded. Link opened in WhatsApp chat.'), 700);
-      } catch (err) {
-        alert('Send failed: ' + (err.message || err));
-        console.error(err);
-      }
-    });
+    if (btnSend) {
+      btnSend.addEventListener('click', async () => {
+        try {
+          btnSend.disabled = true;
+          updateResume();
+          // generate PDF blob
+          const studentName = sanitizeText(el('out-name')?.textContent) || 'student';
+          const filename = `${studentName.replace(/\s+/g,'_') || 'resume'}.pdf`;
+          const blob = await generatePdfBlob(filename);
+
+          // upload
+          const uploadingMsg = 'Uploading resume. This may take a few seconds...';
+          console.log(uploadingMsg);
+          // show simple UI feedback
+          alert('Uploading resume to file host. Please allow the popup for WhatsApp when it appears.');
+
+          const link = await uploadToGofile(blob, filename);
+
+          // Compose WhatsApp message
+          // Replace boss number below if needed (format: countrycode + number, no +'s or dashes)
+          const bossNumber = '9180788618395'; // <<-- change to actual boss number if required
+          const name = encodeURIComponent(el('out-name')?.textContent || 'Unnamed Student');
+          const skillsRaw = sanitizeText(el('skills')?.value || '');
+          const skills = encodeURIComponent(skillsRaw || 'Not specified');
+          const encodedLink = encodeURIComponent(link);
+          const msg = `Hello Sir 👋%0A%0ANew student resume:%0AName: ${name}%0ASkills: ${skills}%0AResume: ${encodedLink}%0A%0A– Third Eye Computer Class`;
+
+          // open WhatsApp chat in new tab
+          const waUrl = `https://wa.me/${bossNumber}?text=${msg}`;
+          window.open(waUrl, '_blank');
+
+          // small confirmation
+          setTimeout(() => alert('Resume uploaded and WhatsApp opened.'), 700);
+        } catch (err) {
+          alert('Send failed: ' + (err.message || err));
+          console.error(err);
+        } finally {
+          btnSend.disabled = false;
+        }
+      });
+    }
   </script>
 </body>
 </html>
